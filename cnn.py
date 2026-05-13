@@ -1,77 +1,93 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torchvision
+import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
 
 # ==========================================
-# 第一部分：定义模型 (SimpleCNN)
+# 1. 定义模型 (SimpleCNN 保持原汁原味)
 # ==========================================
 class SimpleCNN(nn.Module):
     def __init__(self):
         super(SimpleCNN, self).__init__()
-        # 第1层：卷积层。输入1个通道(灰度)，输出16个特征图，卷积核大小3x3
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, padding=1)
-        # 激活函数
         self.relu = nn.ReLU()
-        # 池化层（降采样，把图片变小）
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        # 第2层：全连接层（分类器）。经过池化后，28x28的图变成了14x14。
-        self.fc = nn.Linear(16 * 14 * 14, 10) # 10代表10个类别(0-9)
+        self.fc = nn.Linear(16 * 14 * 14, 10)
 
     def forward(self, x):
-        # x.shape: [Batch_size, 1, 28, 28]
         x = self.conv1(x)
         x = self.relu(x)
         x = self.pool(x)
-        # x.shape: [Batch_size, 16, 14, 14]
-        
-        # 展平操作：把 2D 特征图拉平成 1D 向量
         x = x.view(x.size(0), -1)  
-        # x.shape: [Batch_size, 3136]
-        
         x = self.fc(x)
-        # x.shape: [Batch_size, 10]
         return x
 
 # ==========================================
-# 第二部分：准备训练三大件
+# 2. 下载并加载【真实】 MNIST 数据集
+# ==========================================
+print("正在连接网络下载真实的 MNIST 数据集 (约 60MB)...")
+
+# transform 将图片转换为模型能懂的 Tensor，并把像素值缩放到 0~1 之间
+transform = transforms.Compose([transforms.ToTensor()])
+
+# 自动下载训练集
+train_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+
+# DataLoader 就像一个发牌员，把 60000 张图分成每批 64 张发给模型
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
+
+# ==========================================
+# 3. 准备三大件并开始训练
 # ==========================================
 model = SimpleCNN()
-criterion = nn.CrossEntropyLoss() # 用于分类的交叉熵损失函数
-optimizer = optim.Adam(model.parameters(), lr=0.005) # Adam优化器，学习率0.005
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.005)
 
-# ==========================================
-# 第三部分：准备数据 (我们模拟生成 MNIST 数据)
-# ==========================================
-print("正在生成模拟 MNIST 训练数据...")
-# 模拟 100 张 28x28 的灰度图片
-train_images = torch.randn(100, 1, 28, 28)
-# 对应这100张图片的随机 0-9 标签
-train_labels = torch.randint(0, 10, (100,)) 
+loss_history = [] 
+epochs = 2 # 真实数据有 60000 张，跑 2 遍所有数据就足够看到效果了
 
-# ==========================================
-# 第四部分：标准训练循环 (Training Loop)
-# ==========================================
-epochs = 15 # 学 15 遍所有数据
-
-print("开始训练 (CNN)！注意观察 Loss 变化：")
+print("开始真实数据训练！这次的 Loss 下降会非常平稳：")
 for epoch in range(epochs):
-    # --- 动作 1: 前向传播 ---
-    predictions = model(train_images)
+    # 遍历发牌员发出的每一批图片 (images 包含 64 张图，labels 包含 64 个答案)
+    for batch_idx, (images, labels) in enumerate(train_loader):
+        
+        predictions = model(images)
+        loss = criterion(predictions, labels)
+        
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
-    # --- 动作 2: 计算误差 ---
-    loss = criterion(predictions, train_labels)
+        # 每隔 100 批次记录一次 Loss 并打印
+        if batch_idx % 100 == 0:
+            loss_history.append(loss.item())
+            print(f"第 {epoch+1} 轮 | 进度: {batch_idx * 64}/60000 | 当前误差: {loss.item():.4f}")
 
-    # --- 动作 3: 清空梯度 ---
-    optimizer.zero_grad()
+print("真实数据训练完成！马上开始画图...")
 
-    # --- 动作 4: 反向传播 (核心数学魔法！) ---
-    loss.backward()
+# ==========================================
+# 4. 完美无重叠的可视化排版
+# ==========================================
+# 创建一个 1 行 5 列的画布
+fig, axes = plt.subplots(1, 5, figsize=(16, 3), gridspec_kw={'width_ratios': [3, 1, 1, 1, 1]})
 
-    # --- 动作 5: 更新参数 ---
-    optimizer.step()
+# --- 第一块：画 Loss 曲线 ---
+axes[0].plot(loss_history, color='blue', linewidth=2)
+axes[0].set_title("Real MNIST Training Loss")
+axes[0].set_xlabel("Steps (x100)")
+axes[0].set_ylabel("Loss")
+axes[0].grid(True)
 
-    # 打印当前的误差
-    if (epoch + 1) % 1 == 0:
-        print(f"第 {epoch+1:2d} 轮学习结束 | 当前误差 (Loss): {loss.item():.4f}")
+# --- 后面四块：画卷积核 ---
+kernels = model.conv1.weight.detach().numpy()
+for i in range(4):
+    kernel_image = kernels[i][0] 
+    axes[i+1].imshow(kernel_image, cmap='gray')
+    axes[i+1].set_title(f"Kernel {i+1}")
+    axes[i+1].axis('off')
 
-print("CNN 模拟训练完成！")
+# 自动调整间距，绝对不重叠
+plt.tight_layout()
+plt.show()
