@@ -1,0 +1,14 @@
+git clone git@github.com:liucy-666/T2I-learning.git
+
+创建/切换分支：
+git checkout -b 你的分支名
+这个是切换远程分支
+git switch 远程分支名
+
+查看当前分支
+git branch
+
+推送到远程
+git add .
+git commit -m "说明"
+git push origin 分支名
