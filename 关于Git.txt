@@ -1,0 +1,53 @@
+# Git
+## 一、分支相关
+
+git branch          # 查看本地所有分支，* 代表当前所在分支
+git checkout 分支名 # 切换到指定分支（老版）
+git switch 分支名   # 切换分支（新版更简单）
+git switch -c 新分支名  # 创建并直接进入新分支
+
+
+## 二、提交本地代码（日常标准三步）
+
+git add .                  # 把所有修改加入暂存
+git commit -m "提交备注"   # 提交到本地仓库
+git push                   # 推送到远程（已绑定分支后用）
+
+
+## 三、新分支第一次推送（必用）
+本地新建分支，第一次推云端绑定远程分支：
+
+git push --set-upstream origin 分支名
+
+
+## 四、版本回退
+
+# 1. 软回退：撤销最近1次提交，代码保留，变回未add状态（最常用、安全）
+git reset --mixed HEAD^
+
+# 2. 彻底硬回退：撤销最近1次提交，直接删掉本次所有修改（慎用！）
+git reset --hard HEAD^
+
+
+## 五、文件恢复/撤销修改
+
+git restore 文件名    # 恢复被改动/误删的文件，变回原版
+git status            # 查看当前文件状态
+
+
+## 六、配置用户名邮箱（全局一次搞定）
+
+git config --global user.name "你的名字/昵称"
+git config --global user.email "你的邮箱"
+git config --global --list  # 查看配置是否成功
+
+
+## 七、换行符警告解决（你遇到的 LF/CRLF）
+git config --global core.autocrlf true
+
+
+## 八、分支合并（不用网页手动合并）
+
+git switch main          # 切到主分支
+git merge 其他分支名     # 把别的分支代码合并到main
+git push                 # 推送到远程
