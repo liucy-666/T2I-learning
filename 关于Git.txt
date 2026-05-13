@@ -51,3 +51,8 @@ git config --global core.autocrlf true
 git switch main          # 切到主分支
 git merge 其他分支名     # 把别的分支代码合并到main
 git push                 # 推送到远程
+
+推送失败：
+git pull
+（出现编辑页 → 按 Esc → 输入 :wq → 回车）
+git push
