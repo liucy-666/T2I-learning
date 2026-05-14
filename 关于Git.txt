@@ -66,3 +66,20 @@ git commit -m "first commit"
 git branch -M main
 git remote add origin https://github.com/liucy-666/Computer-Sinece-Homework.git
 git push -u origin main
+
+
+Ps 出现了这种报错：PS D:\Python\T2I-learning> git commit -m "null"
+[main 8d73668] null
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+PS D:\Python\T2I-learning> git push
+To github.com:liucy-666/T2I-learning.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'github.com:liucy-666/T2I-learning.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+执行这条指令：
+git pull --rebase
+git push
