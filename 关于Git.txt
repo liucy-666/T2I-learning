@@ -56,3 +56,13 @@ git push                 # 推送到远程
 git pull
 （出现编辑页 → 按 Esc → 输入 :wq → 回车）
 git push
+
+## 九、远程初始化新仓库
+
+echo "# Computer-Sinece-Homework" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/liucy-666/Computer-Sinece-Homework.git
+git push -u origin main
